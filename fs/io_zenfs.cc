@@ -1086,6 +1086,7 @@ IOStatus ZoneFile::MigrateData(uint64_t offset, uint32_t length,
   uint32_t step = 128 << 10;
   uint32_t read_sz = step;
   int block_sz = zbd_->GetBlockSize();
+  uint32_t total_migrated = 0;
 
   assert(offset % block_sz == 0);
   if (offset % block_sz != 0) {
@@ -1109,9 +1110,13 @@ IOStatus ZoneFile::MigrateData(uint64_t offset, uint32_t length,
       return IOStatus::IOError(strerror(errno));
     }
     target_zone->Append(buf, r);
+    total_migrated += read_sz;  // 统计实际迁移的数据量（不包括padding）
     length -= read_sz;
     offset += r;
   }
+
+  // 统计迁移数据量
+  zbd_->AddMigratedDataSize(total_migrated);
 
   free(buf);
 

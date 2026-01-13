@@ -171,14 +171,24 @@ IOStatus ZbdlibBackend::Close(uint64_t start) {
 }
 
 int ZbdlibBackend::Read(char *buf, int size, uint64_t pos, bool direct) {
-  return pread(direct ? read_direct_f_ : read_f_, buf, size, pos);
+  int ret = pread(direct ? read_direct_f_ : read_f_, buf, size, pos);
+  // 统计读IO次数（实际的系统调用次数）
+  if (ret > 0 && zbd_ != nullptr) {
+    zbd_->AddReadIOCount(1);
+  }
+  return ret;
 }
 
 int ZbdlibBackend::Write(char *data, uint32_t size, uint64_t pos) {
   write_size_calc += size;
   write_size_calc_no_reset += size;
 
-  return pwrite(write_f_, data, size, pos);
+  int ret = pwrite(write_f_, data, size, pos);
+  // 统计写IO次数（实际的系统调用次数）
+  if (ret > 0 && zbd_ != nullptr) {
+    zbd_->AddWriteIOCount(1);
+  }
+  return ret;
 }
 
 }  // namespace ROCKSDB_NAMESPACE

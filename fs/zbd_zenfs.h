@@ -177,6 +177,7 @@ class ZonedBlockDeviceBackend {
   uint32_t block_sz_ = 0;
   uint64_t zone_sz_ = 0;
   uint32_t nr_zones_ = 0;
+  ZonedBlockDevice* zbd_ = nullptr;  // 指向ZonedBlockDevice，用于统计
 
  public:
   virtual IOStatus Open(bool readonly, bool exclusive,
@@ -229,6 +230,9 @@ class ZonedBlockDevice {
   uint32_t finish_threshold_ = 0;
   std::atomic<uint64_t> bytes_written_{0};
   std::atomic<uint64_t> gc_bytes_written_{0};
+  std::atomic<uint64_t> read_io_count_{0};
+  std::atomic<uint64_t> write_io_count_{0};
+  std::atomic<uint64_t> migrated_data_size_{0};
 
   std::atomic<long> active_io_zones_;
   std::atomic<long> open_io_zones_;
@@ -325,10 +329,16 @@ class ZonedBlockDevice {
 
   void AddBytesWritten(uint64_t written) { bytes_written_ += written; };
   void AddGCBytesWritten(uint64_t written) { gc_bytes_written_ += written; };
+  void AddReadIOCount(uint64_t count = 1) { read_io_count_ += count; };
+  void AddWriteIOCount(uint64_t count = 1) { write_io_count_ += count; };
+  void AddMigratedDataSize(uint64_t size) { migrated_data_size_ += size; };
   uint64_t GetUserBytesWritten() {
     return bytes_written_.load() - gc_bytes_written_.load();
   };
   uint64_t GetTotalBytesWritten() { return bytes_written_.load(); };
+  uint64_t GetReadIOCount() { return read_io_count_.load(); };
+  uint64_t GetWriteIOCount() { return write_io_count_.load(); };
+  uint64_t GetMigratedDataSize() { return migrated_data_size_.load(); };
  private:
   IOStatus GetZoneDeferredStatus();
   bool GetActiveIOZoneTokenIfAvailable();

@@ -196,6 +196,7 @@ IOStatus Zone::Append(char *data, uint32_t size) {
     capacity_ -= ret;
     left -= ret;
     zbd_->AddBytesWritten(ret);
+    // 写IO次数统计在底层函数中进行（统计实际的系统调用次数）
   }
 
   return IOStatus::OK();
@@ -224,9 +225,11 @@ ZonedBlockDevice::ZonedBlockDevice(std::string path, ZbdBackendType backend,
     : logger_(logger), metrics_(metrics) {
   if (backend == ZbdBackendType::kBlockDev) {
     zbd_be_ = std::unique_ptr<ZbdlibBackend>(new ZbdlibBackend(path));
+    zbd_be_->zbd_ = this;  // 设置指针以便底层函数访问统计
     Info(logger_, "New Zoned Block Device: %s", zbd_be_->GetFilename().c_str());
   } else if (backend == ZbdBackendType::kZoneFS) {
     zbd_be_ = std::unique_ptr<ZoneFsBackend>(new ZoneFsBackend(path));
+    zbd_be_->zbd_ = this;  // 设置指针以便底层函数访问统计
     Info(logger_, "New zonefs backing: %s", zbd_be_->GetFilename().c_str());
   }
 }
@@ -904,6 +907,7 @@ int ZonedBlockDevice::Read(char *buf, uint64_t offset, int n, bool direct) {
     buf += r;
     left -= r;
     offset += r;
+    // 读IO次数统计在底层函数中进行（统计实际的系统调用次数）
   }
 
   if (r < 0) return r;

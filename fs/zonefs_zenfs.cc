@@ -318,6 +318,10 @@ int ZoneFsBackend::Read(char *buf, int size, uint64_t pos, bool direct) {
       buf += ret;
       offset += ret;
       read += ret;
+      // 统计读IO次数（实际的系统调用次数）
+      if (zbd_ != nullptr) {
+        zbd_->AddReadIOCount(1);
+      }
     } else {
       if (ret < 0) read = ret;
       break;
@@ -344,6 +348,10 @@ int ZoneFsBackend::Write(char *data, uint32_t size, uint64_t pos) {
       data += ret;
       offset += ret;
       written += ret;
+      // 统计写IO次数（实际的系统调用次数）
+      if (zbd_ != nullptr) {
+        zbd_->AddWriteIOCount(1);
+      }
       if (offset == zone_sz_) PutZoneFile(pos, O_WRONLY);
     } else {
       if (ret < 0) written = ret;

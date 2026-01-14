@@ -34,7 +34,7 @@ namespace ROCKSDB_NAMESPACE {
 const int INF = 1e9;
 
 const bool MYMODE = true; //true: Prophet false: LIZA
-const int ZoneNumber = 100; 
+const int ZoneNumber = 200; 
 
 //full compensation: 1 0 0
 //full gc: 0 1 0

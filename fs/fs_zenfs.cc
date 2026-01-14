@@ -288,6 +288,17 @@ ZenFS::~ZenFS() {
 
   meta_log_.reset(nullptr);
   ClearFiles();
+  
+  // 输出统计信息
+  uint64_t read_io_count = zbd_->GetReadIOCount();
+  uint64_t write_io_count = zbd_->GetWriteIOCount();
+  uint64_t migrated_data_size = zbd_->GetMigratedDataSize();
+  printf(logger_, "ZenFS Statistics:");
+  printf(logger_, "  Read IO Count: %lu", read_io_count);
+  printf(logger_, "  Write IO Count: %lu", write_io_count);
+  printf(logger_, "  Migrated Data Size: %lu bytes (%.2f MB)", 
+       migrated_data_size, migrated_data_size / (1024.0 * 1024.0));
+  
   delete zbd_;
 }
 
